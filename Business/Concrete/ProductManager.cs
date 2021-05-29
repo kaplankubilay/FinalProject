@@ -1,0 +1,41 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Business.Abstract;
+using DataAccess.Abstract;
+using Entities.Concrete;
+using Entities.DTOs;
+
+namespace Business.Concrete
+{
+    public class ProductManager:IProductService
+    {
+        private IProductDal _productDal;
+
+        public ProductManager(IProductDal productDal)
+        {
+            _productDal = productDal;
+        }
+
+        public List<Product> GetAll()
+        {
+            return (List<Product>)_productDal.GetAll();
+        }
+
+        public List<Product> GetAllByCategoryId(int id)
+        {
+            return (List<Product>) _productDal.GetAll(p => p.CategoryId == id);
+        }
+
+        public List<Product> GetByUnitPrice(decimal min, decimal max)
+        {
+            return _productDal.GetAll(p => p.UnitPrice >=min && p.UnitPrice <= max).ToList();
+        }
+
+        public IList<ProductDetailDto> GetProductDetails()
+        {
+            return _productDal.GetProductDetails();
+        }
+    }
+}
