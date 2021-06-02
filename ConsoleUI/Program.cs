@@ -21,10 +21,22 @@ namespace ConsoleUI
         private static void GetProductDto()
         {
             ProductManager productManager = new ProductManager(new EfProductDal());
-            foreach (var productDetailDto in productManager.GetProductDetails())
+            //GetProductDetails in Data/durum/message sını, aldık ancak message yada durum(true-false) unuda alabilirdik.
+
+            var result = productManager.GetProductDetails();
+
+            if (result.Success)
             {
-                Console.WriteLine("{0}  {1}  {2}", productDetailDto.ProductName, productDetailDto.CategoryName, productDetailDto.UnitsInStock);
+                foreach (var productDetailDto in result.Data)
+                {
+                    Console.WriteLine("{0}  {1}  {2}", productDetailDto.ProductName, productDetailDto.CategoryName, productDetailDto.UnitsInStock);
+                }
             }
+            else
+            {
+                Console.WriteLine(result.Message);
+            }
+            
         }
 
         private static void GetCategoryName()
@@ -49,7 +61,7 @@ namespace ConsoleUI
         {
             ProductManager productManager = new ProductManager(new EfProductDal());
 
-            foreach (var product in productManager.GetByUnitPrice(20, 40))
+            foreach (var product in productManager.GetByUnitPrice(20, 40).Data)
             {
                 Console.WriteLine(product.ProductName);
             }
