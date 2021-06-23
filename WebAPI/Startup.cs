@@ -31,8 +31,8 @@ namespace WebAPI
         {
             services.AddControllers();
             //Manager içinde veri tutulmuyorsa singleton yapýlabilir aksi halde örn tüm sepetler ayný olur. Data db de tutuluyorsa yine singleton yapýlabilir.
-            services.AddSingleton<IProductService,ProductManager>();
-            services.AddSingleton<IProductDal, EfProductDal>();
+            //services.AddSingleton<IProductService,ProductManager>();
+            //services.AddSingleton<IProductDal, EfProductDal>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,3 +1,4 @@
+using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -6,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Autofac;
+using Business.DependencyResolvers.Autofact;
 
 namespace WebAPI
 {
@@ -18,6 +21,14 @@ namespace WebAPI
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                //outofact configürasyonu yapýldý. .Net default tanýmlý konfigürasyonu kullanma diyoruz.
+                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                //tanýmladýðýmýz businessmodule u burada verdik.
+                .ConfigureContainer<ContainerBuilder>(builder =>
+                    {
+                        builder.RegisterModule(new AutofacBusinessModule());
+                    })
+
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

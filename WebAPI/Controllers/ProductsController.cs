@@ -22,13 +22,13 @@ namespace WebAPI.Controllers
             _productService = productService;
         }
 
-        [HttpGet("addproduct")]
-        public IActionResult AddProduct()
+        [HttpGet("getall")]
+        public IActionResult GetAll()
         {
             var result = _productService.GetAll();
             if (result.Success)
             {
-                return Ok(result);
+                return Ok(result.Data);
             }
 
             return BadRequest(result);
@@ -46,8 +46,8 @@ namespace WebAPI.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("getall")]
-        public IActionResult GetAll(Product product)
+        [HttpPost("addproduct")]
+        public IActionResult AddProduct(Product product)
         {
             var result = _productService.AddProduct(product);
             if (result.Success)
