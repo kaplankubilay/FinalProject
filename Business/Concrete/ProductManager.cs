@@ -6,6 +6,7 @@ using System.Text;
 using Business.Abstract;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
+using Core.Aspects.Autofac.Validation;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
@@ -53,10 +54,9 @@ namespace Business.Concrete
             return new SuccessDataResult<IList<ProductDetailDto>>(_productDal.GetProductDetails()); 
         }
 
+        [ValidationAspect(typeof(ProductValidator))]
         public IResult AddProduct(Product product)
         {
-            ValidationTool.Validate(new ProductValidator(), product);
-
             _productDal.Add(product);
 
             return new Result(true,Messages.ProductAdded);
