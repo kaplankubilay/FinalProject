@@ -3,6 +3,9 @@ using Castle.DynamicProxy;
 
 namespace Core.Utilities.Interceptors
 {
+    /// <summary>
+    /// "invocation" bizim business method larımızdır.
+    /// </summary>
     public abstract class MethodInterception : MethodInterceptionBaseAttribute
     {
         protected virtual void OnBefore(IInvocation invocation) { }

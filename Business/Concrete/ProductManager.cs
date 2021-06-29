@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using Business.Abstract;
+using Business.CCS;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Validation;
@@ -15,7 +16,7 @@ using FluentValidation;
 
 namespace Business.Concrete
 {
-    public class ProductManager:IProductService
+    public class ProductManager : IProductService
     {
         private IProductDal _productDal;
 
@@ -31,7 +32,7 @@ namespace Business.Concrete
                 return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
             }
 
-            return new DataResult<List<Product>>((List<Product>)_productDal.GetAll(),true,Messages.ProductListed);
+            return new DataResult<List<Product>>((List<Product>)_productDal.GetAll(), true, Messages.ProductListed);
         }
 
         public IDataResult<List<Product>> GetAllByCategoryId(int id)
@@ -51,15 +52,16 @@ namespace Business.Concrete
             {
                 return new ErrorDataResult<IList<ProductDetailDto>>(Messages.MaintenanceTime);
             }
-            return new SuccessDataResult<IList<ProductDetailDto>>(_productDal.GetProductDetails()); 
+            return new SuccessDataResult<IList<ProductDetailDto>>(_productDal.GetProductDetails());
         }
 
-        [ValidationAspect(typeof(ProductValidator))]
+        //[ValidationAspect(typeof(ProductValidator))]
         public IResult AddProduct(Product product)
         {
+            //business code
             _productDal.Add(product);
 
-            return new Result(true,Messages.ProductAdded);
+            return new Result(true, Messages.ProductAdded);
         }
 
         public IDataResult<Product> GetByProductId(int id)

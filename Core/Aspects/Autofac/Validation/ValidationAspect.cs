@@ -9,11 +9,15 @@ using FluentValidation;
 
 namespace Core.Aspects.Autofac.Validation
 {
+    /// <summary>
+    /// "aspect" metodun başında sonunda,hata verdiğinde çalışacak yapıdır. 
+    /// </summary>
     public class ValidationAspect : MethodInterception
     {
         private Type _validatorType;
         public ValidationAspect(Type validatorType)
         {
+            //"IsAssignableFrom" atanabilir bir tip mi?
             if (!typeof(IValidator).IsAssignableFrom(validatorType))
             {
                 throw new System.Exception("Bu bir doğrulama sınıfı değildir!");
@@ -21,9 +25,16 @@ namespace Core.Aspects.Autofac.Validation
 
             _validatorType = validatorType;
         }
+
+        /// <summary>
+        /// validation yani doğrulama metodun başında çalışacağı için sadece "onbefore" u override(eziyoruz) ediyoruz.
+        /// </summary>
+        /// <param name="invocation"></param>
         protected override void OnBefore(IInvocation invocation)
         {
+            // "validator" instance ı alınan nesnenin reflection ile metodlarını tutuyor.
             var validator = (IValidator)Activator.CreateInstance(_validatorType);
+            //"product" tipinin yakalandığı yer. attribute te verilen ilk argümanı yakala.
             var entityType = _validatorType.BaseType.GetGenericArguments()[0];
             var entities = invocation.Arguments.Where(t => t.GetType() == entityType);
             foreach (var entity in entities)

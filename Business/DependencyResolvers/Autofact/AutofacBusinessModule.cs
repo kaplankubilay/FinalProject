@@ -4,6 +4,7 @@ using System.Text;
 using Autofac;
 using Autofac.Extras.DynamicProxy;
 using Business.Abstract;
+using Business.CCS;
 using Business.Concrete;
 using Castle.DynamicProxy;
 using Core.Utilities.Interceptors;
@@ -21,6 +22,7 @@ namespace Business.DependencyResolvers.Autofact
         /// <param name="builder"></param>
         protected override void Load(ContainerBuilder builder)
         {
+            //program ilk açılırken outofac bellekte bu nesnelerin reflection ıle instance ını alır boylece daha performanslı çalışır. 
             builder.RegisterType<ProductManager>().As<IProductService>().SingleInstance();
             builder.RegisterType<EfProductDal>().As<IProductDal>().SingleInstance();
 
