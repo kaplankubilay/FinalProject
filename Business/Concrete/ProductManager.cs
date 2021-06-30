@@ -55,11 +55,34 @@ namespace Business.Concrete
             return new SuccessDataResult<IList<ProductDetailDto>>(_productDal.GetProductDetails());
         }
 
-        //[ValidationAspect(typeof(ProductValidator))]
+        [ValidationAspect(typeof(ProductValidator))]
         public IResult AddProduct(Product product)
         {
-            //business code
+            if (!CategoryCountControl(product.CategoryId).Success)
+            {
+                return new ErrorResult(Messages.CategoryCountFailed);
+            }
+
+            if (!ProductNameControl(product.ProductName).Success)
+            {
+                return new ErrorResult(Messages.AlreadyProductNameExist);
+            }
+
             _productDal.Add(product);
+
+            return new Result(true, Messages.ProductAdded);
+        }
+
+        [ValidationAspect(typeof(ProductValidator))]
+        public IResult UpdateProduct(Product product)
+        {
+            if (!CategoryCountControl(product.CategoryId).Success)
+            {
+                return new ErrorResult(Messages.CategoryCountFailed);
+            }
+
+            //business code
+            _productDal.Update(product);
 
             return new Result(true, Messages.ProductAdded);
         }
@@ -67,6 +90,27 @@ namespace Business.Concrete
         public IDataResult<Product> GetByProductId(int id)
         {
             return new SuccessDataResult<Product>(_productDal.Get(p => p.ProductId == id));
+        }
+
+        private IResult CategoryCountControl(int categoryId)
+        {
+            var count =_productDal.GetAll(x => x.CategoryId == categoryId).Count;
+            if (count>=10)
+            {
+                return new ErrorResult(Messages.CategoryCountFailed);
+            }
+
+            return new SuccessResult();
+        }
+
+        private IResult ProductNameControl(string productName)
+        {
+            bool countName = _productDal.GetAll(x => x.ProductName == productName).Any();
+            if (countName)
+            {
+                return new ErrorResult();
+            }
+            return new SuccessResult();
         }
     }
 }
