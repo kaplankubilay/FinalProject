@@ -8,6 +8,7 @@ using Business.CCS;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Validation;
+using Core.Utilities.Business;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
@@ -19,10 +20,17 @@ namespace Business.Concrete
     public class ProductManager : IProductService
     {
         private IProductDal _productDal;
+        private ICategoryService _categoryService;
 
-        public ProductManager(IProductDal productDal)
+        /// <summary>
+        /// bir manager içerisinde kendisinden başka dal eklenemez!...
+        /// </summary>
+        /// <param name="productDal"></param>
+        /// <param name="categoryService"></param>
+        public ProductManager(IProductDal productDal, ICategoryService categoryService)
         {
             _productDal = productDal;
+            _categoryService = categoryService;
         }
 
         public IDataResult<List<Product>> GetAll()
@@ -58,25 +66,23 @@ namespace Business.Concrete
         [ValidationAspect(typeof(ProductValidator))]
         public IResult AddProduct(Product product)
         {
-            if (!CategoryCountControl(product.CategoryId).Success)
+            //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
+            IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName),CategoryCountControl());
+            
+            if (result != null)
             {
-                return new ErrorResult(Messages.CategoryCountFailed);
-            }
-
-            if (!ProductNameControl(product.ProductName).Success)
-            {
-                return new ErrorResult(Messages.AlreadyProductNameExist);
+                return result;
             }
 
             _productDal.Add(product);
 
-            return new Result(true, Messages.ProductAdded);
+            return new SuccessResult(Messages.ProductAdded);
         }
 
         [ValidationAspect(typeof(ProductValidator))]
         public IResult UpdateProduct(Product product)
         {
-            if (!CategoryCountControl(product.CategoryId).Success)
+            if (!PruductCountControl(product.CategoryId).Success)
             {
                 return new ErrorResult(Messages.CategoryCountFailed);
             }
@@ -92,7 +98,12 @@ namespace Business.Concrete
             return new SuccessDataResult<Product>(_productDal.Get(p => p.ProductId == id));
         }
 
-        private IResult CategoryCountControl(int categoryId)
+        /// <summary>
+        /// bir kategoriden 10 dan fazla ürün eklenemez.
+        /// </summary>
+        /// <param name="categoryId"></param>
+        /// <returns></returns>
+        private IResult PruductCountControl(int categoryId)
         {
             var count =_productDal.GetAll(x => x.CategoryId == categoryId).Count;
             if (count>=10)
@@ -103,12 +114,27 @@ namespace Business.Concrete
             return new SuccessResult();
         }
 
+        /// <summary>
+        /// Bir isimden sadece bir kez kullanılabilir.
+        /// </summary>
+        /// <param name="productName"></param>
+        /// <returns></returns>
         private IResult ProductNameControl(string productName)
         {
             bool countName = _productDal.GetAll(x => x.ProductName == productName).Any();
             if (countName)
             {
-                return new ErrorResult();
+                return new ErrorResult(Messages.AlreadyProductNameExist);
+            }
+            return new SuccessResult();
+        }
+
+        private IResult CategoryCountControl()
+        {
+            var categoryCount = _categoryService.GetAll();
+            if (categoryCount.Data.Count > 15)
+            {
+                return new ErrorResult(Messages.CategoryLimitExceded);
             }
             return new SuccessResult();
         }

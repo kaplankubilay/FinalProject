@@ -5,7 +5,7 @@ using DataAccess.Concrete.InMemory;
 
 namespace ConsoleUI
 {
-    class Program
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -20,7 +20,7 @@ namespace ConsoleUI
 
         private static void GetProductDto()
         {
-            ProductManager productManager = new ProductManager(new EfProductDal());
+            ProductManager productManager = new ProductManager(new EfProductDal(),new CategoryManager(new EfCategoryDal()));
             //GetProductDetails in Data/durum/message sını, aldık ancak message yada durum(true-false) unuda alabilirdik.
 
             var result = productManager.GetProductDetails();
@@ -42,7 +42,10 @@ namespace ConsoleUI
         private static void GetCategoryName()
         {
             CategoryManager categoryManager = new CategoryManager(new EfCategoryDal());
-            foreach (var category in categoryManager.GetAll())
+
+            //var result =categoryManager.
+            
+            foreach (var category in categoryManager.GetAll().Data)
             {
                 Console.WriteLine(category.CategoryName);
             }
@@ -59,7 +62,7 @@ namespace ConsoleUI
 
         private static void GetProductName()
         {
-            ProductManager productManager = new ProductManager(new EfProductDal());
+            ProductManager productManager = new ProductManager(new EfProductDal(),new CategoryManager(new EfCategoryDal()));
 
             foreach (var product in productManager.GetByUnitPrice(20, 40).Data)
             {
