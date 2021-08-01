@@ -19,7 +19,7 @@ namespace Business.Constants
 
         public static string CategoryLimitExceded = "Kategori limiti aşıldığı için yeni kategory eklenemiyor.";
 
-        public static string AuthorizationDenied = "Gecersiz kullanıcı.";
+        public static string AuthorizationDenied = "Yetkisiz kullanıcı.";
         
         public static string UserRegistered = "Kullanıcı kaydedildi.";
         
