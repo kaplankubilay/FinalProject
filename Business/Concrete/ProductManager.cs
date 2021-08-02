@@ -34,6 +34,7 @@ namespace Business.Concrete
             _categoryService = categoryService;
         }
 
+        [CacheAspect] //key=cache ismi Value=değeri.
         public IDataResult<List<Product>> GetAll()
         {
             if (DateTime.Now.Hour == 23)
