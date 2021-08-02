@@ -9,6 +9,7 @@ using Business.CCS;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Caching;
+using Core.Aspects.Autofac.Performans;
 using Core.Aspects.Autofac.Transaction;
 using Core.Aspects.Autofac.Validation;
 using Core.Utilities.Business;
@@ -114,6 +115,7 @@ namespace Business.Concrete
         }
 
         [CacheAspect]
+        [PerformanceAspect(5)]
         public IDataResult<Product> GetByProductId(int id)
         {
             return new SuccessDataResult<Product>(_productDal.Get(p => p.ProductId == id));
