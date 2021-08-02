@@ -9,6 +9,7 @@ using Business.CCS;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Caching;
+using Core.Aspects.Autofac.Transaction;
 using Core.Aspects.Autofac.Validation;
 using Core.Utilities.Business;
 using Core.Utilities.Results;
@@ -97,6 +98,19 @@ namespace Business.Concrete
             _productDal.Update(product);
 
             return new Result(true, Messages.ProductAdded);
+        }
+
+        [TransactionScopeAspect]
+        public IResult AddTransactionalTest(Product product)
+        {
+            AddProduct(product);
+            if (product.UnitPrice<10)
+            {
+                throw new Exception("");
+            }
+
+            AddProduct(product);
+            return null;
         }
 
         [CacheAspect]
