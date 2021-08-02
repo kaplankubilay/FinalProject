@@ -8,6 +8,7 @@ using Business.BusinessAspect.Autofac;
 using Business.CCS;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
+using Core.Aspects.Autofac.Caching;
 using Core.Aspects.Autofac.Validation;
 using Core.Utilities.Business;
 using Core.Utilities.Results;
@@ -67,6 +68,7 @@ namespace Business.Concrete
 
         [SecuredOperation("product.add,admin")]
         [ValidationAspect(typeof(ProductValidator))]
+        [CacheRemoveAspect("IProductService.Get")]
         public IResult AddProduct(Product product)
         {
             //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
@@ -83,6 +85,7 @@ namespace Business.Concrete
         }
 
         [ValidationAspect(typeof(ProductValidator))]
+        [CacheRemoveAspect("IProductService.Get")]
         public IResult UpdateProduct(Product product)
         {
             if (!PruductCountControl(product.CategoryId).Success)
@@ -96,6 +99,7 @@ namespace Business.Concrete
             return new Result(true, Messages.ProductAdded);
         }
 
+        [CacheAspect]
         public IDataResult<Product> GetByProductId(int id)
         {
             return new SuccessDataResult<Product>(_productDal.Get(p => p.ProductId == id));
