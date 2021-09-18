@@ -15,27 +15,27 @@ namespace ConsoleUI
 
             //GetCategoryName();
 
-            GetProductDto();
+            //GetProductDto();
         }
 
         private static void GetProductDto()
         {
-            ProductManager productManager = new ProductManager(new EfProductDal(),new CategoryManager(new EfCategoryDal()));
+            //ProductManager productManager = new ProductManager(new EfProductDal(),new CategoryManager(new EfCategoryDal()));
             //GetProductDetails in Data/durum/message sını, aldık ancak message yada durum(true-false) unuda alabilirdik.
 
-            var result = productManager.GetProductDetails();
+            //var result = productManager.GetProductDetails();
 
-            if (result.Success)
-            {
-                foreach (var productDetailDto in result.Data)
-                {
-                    Console.WriteLine("{0}  {1}  {2}", productDetailDto.ProductName, productDetailDto.CategoryName, productDetailDto.UnitsInStock);
-                }
-            }
-            else
-            {
-                Console.WriteLine(result.Message);
-            }
+            //if (result.Success)
+            //{
+            //    foreach (var productDetailDto in result.Data)
+            //    {
+            //        Console.WriteLine("{0}  {1}  {2}", productDetailDto.ProductName, productDetailDto.CategoryName, productDetailDto.UnitsInStock);
+            //    }
+            //}
+            //else
+            //{
+            //    Console.WriteLine(result.Message);
+            //}
             
         }
 
@@ -62,12 +62,12 @@ namespace ConsoleUI
 
         private static void GetProductName()
         {
-            ProductManager productManager = new ProductManager(new EfProductDal(),new CategoryManager(new EfCategoryDal()));
+            //ProductManager productManager = new ProductManager(new EfProductDal(),new CategoryManager(new EfCategoryDal()));
 
-            foreach (var product in productManager.GetByUnitPrice(20, 40).Data)
-            {
-                Console.WriteLine(product.ProductName);
-            }
+            //foreach (var product in productManager.GetByUnitPrice(20, 40).Data)
+            //{
+            //    Console.WriteLine(product.ProductName);
+            //}
         }
     }
 }
