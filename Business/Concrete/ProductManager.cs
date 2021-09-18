@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Business.Abstract;
 using Business.BusinessAspect.Autofac;
 using Business.CCS;
@@ -12,12 +13,15 @@ using Core.Aspects.Autofac.Caching;
 using Core.Aspects.Autofac.Performans;
 using Core.Aspects.Autofac.Transaction;
 using Core.Aspects.Autofac.Validation;
+using Core.CrossCuttingConcerns.Caching.Redis;
 using Core.Utilities.Business;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
 using Entities.Concrete;
 using Entities.DTOs;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Distributed;
+using DistributedCacheExtensions = Core.CrossCuttingConcerns.Caching.Redis.DistributedCacheExtensions;
 
 namespace Business.Concrete
 {
@@ -25,19 +29,21 @@ namespace Business.Concrete
     {
         private IProductDal _productDal;
         private ICategoryService _categoryService;
+        private IDistributedCache _cache;
 
         /// <summary>
         /// bir manager içerisinde kendisinden başka dal eklenemez!...
         /// </summary>
         /// <param name="productDal"></param>
         /// <param name="categoryService"></param>
-        public ProductManager(IProductDal productDal, ICategoryService categoryService)
+        public ProductManager(IProductDal productDal, ICategoryService categoryService, IDistributedCache cache)
         {
             _productDal = productDal;
             _categoryService = categoryService;
+            _cache = cache;
         }
 
-        [CacheAspect] //key=cache ismi Value=değeri.
+        //[CacheAspect] //key=cache ismi Value=değeri.
         public IDataResult<List<Product>> GetAll()
         {
             if (DateTime.Now.Hour == 23)
@@ -45,7 +51,47 @@ namespace Business.Concrete
                 return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
             }
 
-            return new DataResult<List<Product>>((List<Product>)_productDal.GetAll(), true, Messages.ProductListed);
+
+            var result= new DataResult<List<Product>>((List<Product>)_productDal.GetAll(), true, Messages.ProductListed);
+
+            
+            string recordKey = "Product_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
+
+            var products = _cache.GetRecordAsync<List<Product>>(recordKey).Result;
+
+            if (products == null)
+            {
+                products = (List<Product>)_productDal.GetAll();
+
+                _cache.SetRecordAsync(recordKey, products).Wait();
+            }
+            else
+            {
+                string loadLocation = $"Loaded from the cache at { DateTime.Now }";
+                string isCcheData = "text-danger";
+            }
+
+
+            return result;
+        }
+
+        private async Task RedisCacheManager()
+        {
+            string recordKey = "Product_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
+
+             var products = await _cache.GetRecordAsync<List<Product>>(recordKey);
+
+            if (products == null)
+            {
+                products =await (Task<List<Product>>)_productDal.GetAll();
+
+                await _cache.SetRecordAsync(recordKey, products);
+            }
+            else
+            {
+                string loadLocation = $"Loaded from the cache at { DateTime.Now }";
+                string isCcheData = "text-danger";
+            }
         }
 
         public IDataResult<List<Product>> GetAllByCategoryId(int id)
