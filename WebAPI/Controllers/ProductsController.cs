@@ -24,11 +24,11 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet("getall")]
-        public IActionResult GetAll()
+        public async Task< IActionResult > GetAll()
         {
             Thread.Sleep(1000);
 
-            var result = _productService.GetAll();
+            var result = await _productService.GetAll();
             if (result.Success)
             {
                 return Ok(result);

@@ -7,6 +7,7 @@ using Business.Abstract;
 using Business.CCS;
 using Business.Concrete;
 using Castle.DynamicProxy;
+using Core.CrossCuttingConcerns.Caching.Redis;
 using Core.Utilities.Interceptors;
 using Core.Utilities.Security.JWT;
 using DataAccess.Abstract;
@@ -37,6 +38,8 @@ namespace Business.DependencyResolvers.Autofact
 
             builder.RegisterType<AuthManager>().As<IAuthService>();
             builder.RegisterType<JwtHelper>().As<ITokenHelper>();
+
+            builder.RegisterType<CacheRedisService>().As<ICacheRedisService>();
 
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
 

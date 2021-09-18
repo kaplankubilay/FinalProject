@@ -25,65 +25,132 @@ using DistributedCacheExtensions = Core.CrossCuttingConcerns.Caching.Redis.Distr
 
 namespace Business.Concrete
 {
+    public interface IApplicationCache
+    {
+        Task<IList<Product>> GetProducts();
+    }
+
+    public class ApplicationCache : IApplicationCache
+    {
+        private readonly ICacheRedisService _cacheRedisService;
+        private IProductDal _productDal;
+
+        public ApplicationCache(ICacheRedisService cacheRedisService, IProductDal productDal)
+        {
+            _cacheRedisService = cacheRedisService;
+            _productDal = productDal;
+        }
+
+        public async Task<IList<Product>> GetProducts()
+        {
+            const string key = "products";
+            IList<Product>? list = await _cacheRedisService.ReadCachedModel<IList<Product>>(key);
+            if (list == null)
+            {
+                var result = _productDal.GetAll();
+                list = result;
+                await _cacheRedisService.CacheModel(key, list, TimeSpan.FromMinutes(10));
+            }
+            return list;
+
+        }
+
+        public async Task<IList<Product>> GetProduction()
+        {
+            const string key = "Production";
+            IList<Product>? list = await _cacheRedisService.ReadCachedModel<IList<Product>>(key);
+            if (list == null)
+            {
+                var result = _productDal.GetAll();
+                list = result;
+                await _cacheRedisService.CacheModel(key, list, TimeSpan.FromMinutes(30));
+            }
+            return list;
+
+        }
+    }
     public class ProductManager : IProductService
     {
         private IProductDal _productDal;
         private ICategoryService _categoryService;
         private IDistributedCache _cache;
+        private ICacheRedisService _redisService;
 
         /// <summary>
         /// bir manager içerisinde kendisinden başka dal eklenemez!...
         /// </summary>
         /// <param name="productDal"></param>
         /// <param name="categoryService"></param>
-        public ProductManager(IProductDal productDal, ICategoryService categoryService, IDistributedCache cache)
+        public ProductManager(IProductDal productDal, ICategoryService categoryService, IDistributedCache cache, ICacheRedisService redisService)
         {
             _productDal = productDal;
             _categoryService = categoryService;
             _cache = cache;
+            _redisService = redisService;
         }
 
         //[CacheAspect] //key=cache ismi Value=değeri.
-        public IDataResult<List<Product>> GetAll()
+        public async Task<IDataResult<List<Product>>> GetAll()
         {
             if (DateTime.Now.Hour == 23)
             {
                 return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
             }
 
-
-            var result= new DataResult<List<Product>>((List<Product>)_productDal.GetAll(), true, Messages.ProductListed);
-
-            
-            string recordKey = "Product_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
-
-            var products = _cache.GetRecordAsync<List<Product>>(recordKey).Result;
-
+            var products = await _redisService.ReadCachedModel<List<Product>>("products");
             if (products == null)
             {
-                products = (List<Product>)_productDal.GetAll();
-
-                _cache.SetRecordAsync(recordKey, products).Wait();
-            }
-            else
-            {
-                string loadLocation = $"Loaded from the cache at { DateTime.Now }";
-                string isCcheData = "text-danger";
+                var list = _productDal.GetAll();
+                await _redisService.CacheModel("products", list);
             }
 
-
+            var result = new DataResult<List<Product>>((List<Product>)_productDal.GetAll(), true, Messages.ProductListed);
             return result;
         }
+
+
+
+        //[CacheAspect] //key=cache ismi Value=değeri.
+        //public IDataResult<List<Product>> GetAll()
+        //{
+        //    if (DateTime.Now.Hour == 23)
+        //    {
+        //        return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
+        //    }
+
+
+        //    var result= new DataResult<List<Product>>((List<Product>)_productDal.GetAll(), true, Messages.ProductListed);
+
+
+        //    string recordKey = "Product_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
+
+        //    var products = _cache.GetRecordAsync<List<Product>>(recordKey).Result;
+
+        //    if (products == null)
+        //    {
+        //        products = (List<Product>)_productDal.GetAll();
+
+        //        _cache.SetRecordAsync(recordKey, products).Wait();
+        //    }
+        //    else
+        //    {
+        //        string loadLocation = $"Loaded from the cache at { DateTime.Now }";
+        //        string isCcheData = "text-danger";
+        //    }
+
+
+        //    return result;
+        //}
 
         private async Task RedisCacheManager()
         {
             string recordKey = "Product_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
 
-             var products = await _cache.GetRecordAsync<List<Product>>(recordKey);
+            var products = await _cache.GetRecordAsync<List<Product>>(recordKey);
 
             if (products == null)
             {
-                products =await (Task<List<Product>>)_productDal.GetAll();
+                products = await (Task<List<Product>>)_productDal.GetAll();
 
                 await _cache.SetRecordAsync(recordKey, products);
             }
@@ -120,8 +187,8 @@ namespace Business.Concrete
         public IResult AddProduct(Product product)
         {
             //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
-            IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName),CategoryCountControl());
-            
+            IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
+
             if (result != null)
             {
                 return result;
@@ -151,7 +218,7 @@ namespace Business.Concrete
         public IResult AddTransactionalTest(Product product)
         {
             AddProduct(product);
-            if (product.UnitPrice<10)
+            if (product.UnitPrice < 10)
             {
                 throw new Exception("");
             }
@@ -174,8 +241,8 @@ namespace Business.Concrete
         /// <returns></returns>
         private IResult PruductCountControl(int categoryId)
         {
-            var count =_productDal.GetAll(x => x.CategoryId == categoryId).Count;
-            if (count>=10)
+            var count = _productDal.GetAll(x => x.CategoryId == categoryId).Count;
+            if (count >= 10)
             {
                 return new ErrorResult(Messages.CategoryCountFailed);
             }
