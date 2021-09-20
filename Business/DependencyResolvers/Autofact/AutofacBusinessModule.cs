@@ -14,6 +14,8 @@ using DataAccess.Abstract;
 using DataAccess.Concrete.EntityFramework;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
+using RedisManages.Abstract;
+using RedisManages.Concrete;
 
 namespace Business.DependencyResolvers.Autofact
 {
@@ -40,6 +42,8 @@ namespace Business.DependencyResolvers.Autofact
             builder.RegisterType<JwtHelper>().As<ITokenHelper>();
 
             builder.RegisterType<CacheRedisService>().As<ICacheRedisService>();
+
+            builder.RegisterType<ApplicationRedisCache>().As<IApplicationRedisCache>();
 
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
 

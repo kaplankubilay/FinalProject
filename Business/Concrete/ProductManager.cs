@@ -21,72 +21,31 @@ using Entities.Concrete;
 using Entities.DTOs;
 using FluentValidation;
 using Microsoft.Extensions.Caching.Distributed;
+using RedisManages.Abstract;
 using DistributedCacheExtensions = Core.CrossCuttingConcerns.Caching.Redis.DistributedCacheExtensions;
 
 namespace Business.Concrete
 {
-    public interface IApplicationCache
-    {
-        Task<IList<Product>> GetProducts();
-    }
-
-    public class ApplicationCache : IApplicationCache
-    {
-        private readonly ICacheRedisService _cacheRedisService;
-        private IProductDal _productDal;
-
-        public ApplicationCache(ICacheRedisService cacheRedisService, IProductDal productDal)
-        {
-            _cacheRedisService = cacheRedisService;
-            _productDal = productDal;
-        }
-
-        public async Task<IList<Product>> GetProducts()
-        {
-            const string key = "products";
-            IList<Product>? list = await _cacheRedisService.ReadCachedModel<IList<Product>>(key);
-            if (list == null)
-            {
-                var result = _productDal.GetAll();
-                list = result;
-                await _cacheRedisService.CacheModel(key, list, TimeSpan.FromMinutes(10));
-            }
-            return list;
-
-        }
-
-        public async Task<IList<Product>> GetProduction()
-        {
-            const string key = "Production";
-            IList<Product>? list = await _cacheRedisService.ReadCachedModel<IList<Product>>(key);
-            if (list == null)
-            {
-                var result = _productDal.GetAll();
-                list = result;
-                await _cacheRedisService.CacheModel(key, list, TimeSpan.FromMinutes(30));
-            }
-            return list;
-
-        }
-    }
     public class ProductManager : IProductService
     {
         private IProductDal _productDal;
         private ICategoryService _categoryService;
         private IDistributedCache _cache;
         private ICacheRedisService _redisService;
+        private IApplicationRedisCache _applicationRedisCache;
 
         /// <summary>
         /// bir manager içerisinde kendisinden başka dal eklenemez!...
         /// </summary>
         /// <param name="productDal"></param>
         /// <param name="categoryService"></param>
-        public ProductManager(IProductDal productDal, ICategoryService categoryService, IDistributedCache cache, ICacheRedisService redisService)
+        public ProductManager(IProductDal productDal, ICategoryService categoryService, IDistributedCache cache, ICacheRedisService redisService, IApplicationRedisCache applicationRedisCache)
         {
             _productDal = productDal;
             _categoryService = categoryService;
             _cache = cache;
             _redisService = redisService;
+            _applicationRedisCache = applicationRedisCache;
         }
 
         //[CacheAspect] //key=cache ismi Value=değeri.
@@ -97,68 +56,8 @@ namespace Business.Concrete
                 return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
             }
 
-            var products = await _redisService.ReadCachedModel<List<Product>>("products");
-            if (products == null)
-            {
-                var list = _productDal.GetAll();
-                await _redisService.CacheModel("products", list);
-            }
-
-            var result = new DataResult<List<Product>>((List<Product>)_productDal.GetAll(), true, Messages.ProductListed);
-            return result;
-        }
-
-
-
-        //[CacheAspect] //key=cache ismi Value=değeri.
-        //public IDataResult<List<Product>> GetAll()
-        //{
-        //    if (DateTime.Now.Hour == 23)
-        //    {
-        //        return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
-        //    }
-
-
-        //    var result= new DataResult<List<Product>>((List<Product>)_productDal.GetAll(), true, Messages.ProductListed);
-
-
-        //    string recordKey = "Product_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
-
-        //    var products = _cache.GetRecordAsync<List<Product>>(recordKey).Result;
-
-        //    if (products == null)
-        //    {
-        //        products = (List<Product>)_productDal.GetAll();
-
-        //        _cache.SetRecordAsync(recordKey, products).Wait();
-        //    }
-        //    else
-        //    {
-        //        string loadLocation = $"Loaded from the cache at { DateTime.Now }";
-        //        string isCcheData = "text-danger";
-        //    }
-
-
-        //    return result;
-        //}
-
-        private async Task RedisCacheManager()
-        {
-            string recordKey = "Product_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
-
-            var products = await _cache.GetRecordAsync<List<Product>>(recordKey);
-
-            if (products == null)
-            {
-                products = await (Task<List<Product>>)_productDal.GetAll();
-
-                await _cache.SetRecordAsync(recordKey, products);
-            }
-            else
-            {
-                string loadLocation = $"Loaded from the cache at { DateTime.Now }";
-                string isCcheData = "text-danger";
-            }
+            var products = await _applicationRedisCache.GetProductsCache();
+            return new DataResult<List<Product>>((List<Product>)products,true,Messages.ProductListed);
         }
 
         public IDataResult<List<Product>> GetAllByCategoryId(int id)
