@@ -22,7 +22,6 @@ using Entities.DTOs;
 using FluentValidation;
 using Microsoft.Extensions.Caching.Distributed;
 using RedisManages.Abstract;
-using DistributedCacheExtensions = Core.CrossCuttingConcerns.Caching.Redis.DistributedCacheExtensions;
 
 namespace Business.Concrete
 {
@@ -80,9 +79,9 @@ namespace Business.Concrete
             return new SuccessDataResult<IList<ProductDetailDto>>(_productDal.GetProductDetails());
         }
 
-        [SecuredOperation("product.add,admin")]
+        //[SecuredOperation("product.add,admin")]
         [ValidationAspect(typeof(ProductValidator))]
-        [CacheRemoveAspect("IProductService.Get")]
+        //[CacheRemoveAspect("IProductService.Get")]
         public IResult AddProduct(Product product)
         {
             //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
@@ -94,6 +93,8 @@ namespace Business.Concrete
             }
 
             _productDal.Add(product);
+
+            _applicationRedisCache.DeleteCache("Products_");
 
             return new SuccessResult(Messages.ProductAdded);
         }

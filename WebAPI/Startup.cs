@@ -70,7 +70,6 @@ namespace WebAPI
             services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = Configuration.GetConnectionString("Redis");
-                options.InstanceName = "RedisDemo_";
             });
         }
 

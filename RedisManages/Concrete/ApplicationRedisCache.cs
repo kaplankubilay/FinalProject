@@ -23,13 +23,13 @@ namespace RedisManages.Concrete
 
         public async Task<IList<Product>> GetProductsCache()
         {
-            const string key = "Products_2";
+            const string key = "Products_";
             IList<Product>? list = await _cacheRedisService.ReadCachedModel<IList<Product>>(key);
             if (list == null)
             {
                 var result = _productDal.GetAll();
                 list = result;
-                await _cacheRedisService.CacheModel(key, list, TimeSpan.FromMinutes(2));
+                await _cacheRedisService.CacheModel(key, list, TimeSpan.FromMinutes(5));
             }
             return list;
 
@@ -47,6 +47,11 @@ namespace RedisManages.Concrete
             }
             return list;
 
+        }
+
+        public async Task DeleteCache(string key)
+        {
+            await _cacheRedisService.DeleteCacheModel(key);
         }
     }
 }
