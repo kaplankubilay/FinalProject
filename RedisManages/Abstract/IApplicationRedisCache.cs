@@ -12,6 +12,6 @@ namespace RedisManages.Abstract
         Task<IList<Product>> GetProductsCache();
         Task<IList<Product>> GetProduction();
 
-        Task DeleteCache(string key);
+        Task DeleteCache(string? key);
     }
 }

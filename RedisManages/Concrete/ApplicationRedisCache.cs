@@ -49,7 +49,7 @@ namespace RedisManages.Concrete
 
         }
 
-        public async Task DeleteCache(string key)
+        public async Task DeleteCache(string? key)
         {
             await _cacheRedisService.DeleteCacheModel(key);
         }

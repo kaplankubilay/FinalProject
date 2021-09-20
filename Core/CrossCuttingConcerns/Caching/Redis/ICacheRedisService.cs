@@ -13,6 +13,6 @@ namespace Core.CrossCuttingConcerns.Caching.Redis
 
         ValueTask<T?> ReadCachedModel<T>(string key);
 
-        ValueTask DeleteCacheModel(string key);
+        ValueTask DeleteCacheModel(string? key);
     }
 }

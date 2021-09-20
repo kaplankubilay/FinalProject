@@ -47,7 +47,7 @@ namespace Core.CrossCuttingConcerns.Caching.Redis
             return await _distributedCache.GetStringAsync(key);
         }
 
-        public async ValueTask DeleteCacheModel(string key)
+        public async ValueTask DeleteCacheModel(string? key)
         {
             await _distributedCache.RemoveAsync(key);
         }
