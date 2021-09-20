@@ -29,8 +29,6 @@ namespace Business.Concrete
     {
         private IProductDal _productDal;
         private ICategoryService _categoryService;
-        private IDistributedCache _cache;
-        private ICacheRedisService _redisService;
         private IApplicationRedisCache _applicationRedisCache;
 
         /// <summary>
@@ -38,12 +36,10 @@ namespace Business.Concrete
         /// </summary>
         /// <param name="productDal"></param>
         /// <param name="categoryService"></param>
-        public ProductManager(IProductDal productDal, ICategoryService categoryService, IDistributedCache cache, ICacheRedisService redisService, IApplicationRedisCache applicationRedisCache)
+        public ProductManager(IProductDal productDal, ICategoryService categoryService, IApplicationRedisCache applicationRedisCache)
         {
             _productDal = productDal;
             _categoryService = categoryService;
-            _cache = cache;
-            _redisService = redisService;
             _applicationRedisCache = applicationRedisCache;
         }
 
