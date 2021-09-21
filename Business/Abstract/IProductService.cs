@@ -10,7 +10,10 @@ namespace Business.Abstract
 {
     public interface IProductService
     {
-        Task<IDataResult<List<Product>>> GetAll();
+        //redis cache for getall
+        //Task<IDataResult<List<Product>>> GetAll();
+
+        IDataResult<IList<Product>> GetAll();
         IDataResult<List<Product>> GetAllByCategoryId(int id);
         IDataResult<List<Product>> GetByUnitPrice(decimal min, decimal max);
         IDataResult<IList<ProductDetailDto>> GetProductDetails();

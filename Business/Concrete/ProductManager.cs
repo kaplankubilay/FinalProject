@@ -43,17 +43,32 @@ namespace Business.Concrete
             _applicationRedisCache = applicationRedisCache;
         }
 
-        //[CacheAspect] //key=cache ismi Value=değeri.
-        public async Task<IDataResult<List<Product>>> GetAll()
+        [CacheAspect] //key=cache ismi Value=değeri.
+        public IDataResult<IList<Product>> GetAll()
         {
             if (DateTime.Now.Hour == 23)
             {
-                return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
+                return new ErrorDataResult<IList<Product>>(Messages.MaintenanceTime);
             }
 
-            var products = await _applicationRedisCache.GetProductsCache();
-            return new DataResult<List<Product>>((List<Product>)products,true,Messages.ProductListed);
+            var productList = _productDal.GetAll();
+
+            //return new DataResult<List<Product>>(_productDal.GetAll(),true,Messages.ProductListed);
+            return new SuccessDataResult<IList<Product>>(productList,Messages.ProductListed);
+            
         }
+
+        //Redis Cache for getall
+        //public async Task<IDataResult<List<Product>>> GetAll()
+        //{
+        //    if (DateTime.Now.Hour == 23)
+        //    {
+        //        return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
+        //    }
+
+        //    var products = await _applicationRedisCache.GetProductsCache();
+        //    return new DataResult<List<Product>>((List<Product>)products,true,Messages.ProductListed);
+        //}
 
         public IDataResult<List<Product>> GetAllByCategoryId(int id)
         {
@@ -75,9 +90,9 @@ namespace Business.Concrete
             return new SuccessDataResult<IList<ProductDetailDto>>(_productDal.GetProductDetails());
         }
 
-        //[SecuredOperation("product.add,admin")]
+        [SecuredOperation("product.add,admin")]
         [ValidationAspect(typeof(ProductValidator))]
-        //[CacheRemoveAspect("IProductService.Get")]
+        [CacheRemoveAspect("IProductService.Get")]
         public IResult AddProduct(Product product)
         {
             //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
@@ -90,10 +105,27 @@ namespace Business.Concrete
 
             _productDal.Add(product);
 
-            _applicationRedisCache.DeleteCache("Products_");
-
             return new SuccessResult(Messages.ProductAdded);
         }
+
+        //RedisCache for AddProduct
+        //[ValidationAspect(typeof(ProductValidator))]
+        //public IResult AddProduct(Product product)
+        //{
+        //    //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
+        //    IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
+
+        //    if (result != null)
+        //    {
+        //        return result;
+        //    }
+
+        //    _productDal.Add(product);
+
+        //    _applicationRedisCache.DeleteCache("Products_");
+
+        //    return new SuccessResult(Messages.ProductAdded);
+        //}
 
         [ValidationAspect(typeof(ProductValidator))]
         [CacheRemoveAspect("IProductService.Get")]

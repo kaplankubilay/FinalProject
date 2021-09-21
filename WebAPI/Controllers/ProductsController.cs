@@ -24,11 +24,11 @@ namespace WebAPI.Controllers
         }
 
         [HttpGet("getall")]
-        public async Task< IActionResult > GetAll()
+        public IActionResult GetAll()
         {
             Thread.Sleep(1000);
 
-            var result = await _productService.GetAll();
+            var result = _productService.GetAll();
             if (result.Success)
             {
                 return Ok(result);
@@ -36,6 +36,21 @@ namespace WebAPI.Controllers
 
             return BadRequest(result);
         }
+
+        //Redis cache for getAll
+        //[HttpGet("getall")]
+        //public async Task< IActionResult > GetAll()
+        //{
+        //    Thread.Sleep(1000);
+
+        //    var result = await _productService.GetAll();
+        //    if (result.Success)
+        //    {
+        //        return Ok(result);
+        //    }
+
+        //    return BadRequest(result);
+        //}
 
         [HttpGet("getproductbyid")]
         public IActionResult GetProductById(int productId)
