@@ -21,6 +21,9 @@ using Entities.Concrete;
 using Entities.DTOs;
 using FluentValidation;
 using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
+using RabbitMQManages.Publisher;
+using RabbitMQManages.Subscriber;
 using RedisManages.Abstract;
 
 namespace Business.Concrete
@@ -30,17 +33,20 @@ namespace Business.Concrete
         private IProductDal _productDal;
         private ICategoryService _categoryService;
         private IApplicationRedisCache _applicationRedisCache;
+        private IPublisher _publisher;
+        private ISubscriber _subscriber;
 
         /// <summary>
         /// bir manager içerisinde kendisinden başka dal eklenemez!...
         /// </summary>
         /// <param name="productDal"></param>
         /// <param name="categoryService"></param>
-        public ProductManager(IProductDal productDal, ICategoryService categoryService, IApplicationRedisCache applicationRedisCache)
+        public ProductManager(IProductDal productDal, ICategoryService categoryService, IApplicationRedisCache applicationRedisCache, IPublisher publisher)
         {
             _productDal = productDal;
             _categoryService = categoryService;
             _applicationRedisCache = applicationRedisCache;
+            _publisher = publisher;
         }
 
         [CacheAspect] //key=cache ismi Value=değeri.
@@ -54,8 +60,32 @@ namespace Business.Concrete
             var productList = _productDal.GetAll();
 
             //return new DataResult<List<Product>>(_productDal.GetAll(),true,Messages.ProductListed);
-            return new SuccessDataResult<IList<Product>>(productList,Messages.ProductListed);
-            
+            return new SuccessDataResult<IList<Product>>(productList, Messages.ProductListed);
+
+        }
+
+        public IResult AddProduct(Product product)
+        {
+            //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
+            IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
+
+            if (result != null) 
+            {
+                return result;
+            }
+
+            int count = 0;
+            while (count != 5)
+            {
+                var message = new { Name = "Producer", Messages = $"{product.ProductName}"};
+                //var header = new Dictionary<string, object> { { "account", "add" } };
+                _publisher.Publish(JsonConvert.SerializeObject(message), "report.order", null);
+                count++;
+            }
+
+            _productDal.Add(product);
+
+            return new SuccessResult(Messages.ProductAdded);
         }
 
         //Redis Cache for getall
@@ -90,24 +120,26 @@ namespace Business.Concrete
             return new SuccessDataResult<IList<ProductDetailDto>>(_productDal.GetProductDetails());
         }
 
-        [SecuredOperation("product.add,admin")]
-        [ValidationAspect(typeof(ProductValidator))]
-        [CacheRemoveAspect("IProductService.Get")]
-        public IResult AddProduct(Product product)
-        {
-            //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
-            IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
+        //ORGINAL
+        //[SecuredOperation("product.add,admin")]
+        //[ValidationAspect(typeof(ProductValidator))]
+        //[CacheRemoveAspect("IProductService.Get")]
+        //public IResult AddProduct(Product product)
+        //{
+        //    //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
+        //    IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
 
-            if (result != null)
-            {
-                return result;
-            }
+        //    if (result != null)
+        //    {
+        //        return result;
+        //    }
 
-            _productDal.Add(product);
+        //    _productDal.Add(product);
 
-            return new SuccessResult(Messages.ProductAdded);
-        }
+        //    return new SuccessResult(Messages.ProductAdded);
+        //}
 
+        
         //RedisCache for AddProduct
         //[ValidationAspect(typeof(ProductValidator))]
         //public IResult AddProduct(Product product)
