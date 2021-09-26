@@ -26,4 +26,8 @@
     <Folder Include="Utilities\Business\BusinessTools\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RabbitMQManages\RabbitMQManages.csproj" />
+  </ItemGroup>
+
 </Project>

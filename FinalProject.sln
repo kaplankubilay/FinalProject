@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAPI", "WebAPI\WebAPI.csproj", "{F7993ED8-4B99-413D-A2BF-803DA3D0AF80}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RedisManages", "RedisManages\RedisManages.csproj", "{972D2297-231B-45C5-969B-9F4B6416A20C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RedisManages", "RedisManages\RedisManages.csproj", "{972D2297-231B-45C5-969B-9F4B6416A20C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMQManages", "RabbitMQManages\RabbitMQManages.csproj", "{35476D1F-B349-4743-9AC9-BBABAB1E9A1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{972D2297-231B-45C5-969B-9F4B6416A20C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{972D2297-231B-45C5-969B-9F4B6416A20C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{972D2297-231B-45C5-969B-9F4B6416A20C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35476D1F-B349-4743-9AC9-BBABAB1E9A1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35476D1F-B349-4743-9AC9-BBABAB1E9A1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35476D1F-B349-4743-9AC9-BBABAB1E9A1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35476D1F-B349-4743-9AC9-BBABAB1E9A1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

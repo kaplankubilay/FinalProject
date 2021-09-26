@@ -7,6 +7,9 @@ using Core.CrossCuttingConcerns.Caching.Microsoft;
 using Core.Utilities.IoC;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using RabbitMQ.Client;
+using RabbitMQManages.Connection;
+using RabbitMQManages.Publisher;
 
 namespace Core.DependencyResolvers
 {
@@ -26,6 +29,19 @@ namespace Core.DependencyResolvers
 
             //kronometre için instance oluşturur.
             services.AddSingleton<Stopwatch>();
+
+            //RABBITMq CONFIGURATIONS
+            //rabbitMq connection configuration
+            services.AddSingleton<IConnectionProvider>(new ConnectionProvider("amqp://localhost"));
+            //rabbitMq publisher configuration
+            services.AddSingleton<IPublisher>(x => new Publisher(x.GetService<IConnectionProvider>(),
+                "final_exchange",
+                ExchangeType.Topic));
+            //services.AddSingleton<ISubscriber>(x => new Subscriber(x.GetService<IConnectionProvider>(),
+            //    "final_exchange",
+            //    "report_queue",
+            //    "report.*",
+            //    ExchangeType.Topic));
         }
     }
 }
