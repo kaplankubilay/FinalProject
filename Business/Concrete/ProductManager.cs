@@ -49,6 +49,7 @@ namespace Business.Concrete
             _publisher = publisher;
         }
 
+        //Kampın Orjinal Metodu
         [CacheAspect] //key=cache ismi Value=değeri.
         public IDataResult<IList<Product>> GetAll()
         {
@@ -63,42 +64,6 @@ namespace Business.Concrete
             return new SuccessDataResult<IList<Product>>(productList, Messages.ProductListed);
 
         }
-
-        public IResult AddProduct(Product product)
-        {
-            //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
-            IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
-
-            if (result != null) 
-            {
-                return result;
-            }
-
-            int count = 0;
-            while (count != 5)
-            {
-                var message = new { Name = "Producer", Messages = $"{product.ProductName}"};
-                //var header = new Dictionary<string, object> { { "account", "add" } };
-                _publisher.Publish(JsonConvert.SerializeObject(message), "report.order", null);
-                count++;
-            }
-
-            _productDal.Add(product);
-
-            return new SuccessResult(Messages.ProductAdded);
-        }
-
-        //Redis Cache for getall
-        //public async Task<IDataResult<List<Product>>> GetAll()
-        //{
-        //    if (DateTime.Now.Hour == 23)
-        //    {
-        //        return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
-        //    }
-
-        //    var products = await _applicationRedisCache.GetProductsCache();
-        //    return new DataResult<List<Product>>((List<Product>)products,true,Messages.ProductListed);
-        //}
 
         public IDataResult<List<Product>> GetAllByCategoryId(int id)
         {
@@ -120,44 +85,24 @@ namespace Business.Concrete
             return new SuccessDataResult<IList<ProductDetailDto>>(_productDal.GetProductDetails());
         }
 
-        //ORGINAL
-        //[SecuredOperation("product.add,admin")]
-        //[ValidationAspect(typeof(ProductValidator))]
-        //[CacheRemoveAspect("IProductService.Get")]
-        //public IResult AddProduct(Product product)
-        //{
-        //    //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
-        //    IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
+        //Kampın ORGINAL Metodu
+        [SecuredOperation("product.add,admin")]
+        [ValidationAspect(typeof(ProductValidator))]
+        [CacheRemoveAspect("IProductService.Get")]
+        public IResult AddProduct(Product product)
+        {
+            //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
+            IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
 
-        //    if (result != null)
-        //    {
-        //        return result;
-        //    }
+            if (result != null)
+            {
+                return result;
+            }
 
-        //    _productDal.Add(product);
+            _productDal.Add(product);
 
-        //    return new SuccessResult(Messages.ProductAdded);
-        //}
-
-        
-        //RedisCache for AddProduct
-        //[ValidationAspect(typeof(ProductValidator))]
-        //public IResult AddProduct(Product product)
-        //{
-        //    //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
-        //    IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
-
-        //    if (result != null)
-        //    {
-        //        return result;
-        //    }
-
-        //    _productDal.Add(product);
-
-        //    _applicationRedisCache.DeleteCache("Products_");
-
-        //    return new SuccessResult(Messages.ProductAdded);
-        //}
+            return new SuccessResult(Messages.ProductAdded);
+        }
 
         [ValidationAspect(typeof(ProductValidator))]
         [CacheRemoveAspect("IProductService.Get")]
@@ -234,5 +179,61 @@ namespace Business.Concrete
             }
             return new SuccessResult();
         }
+
+        //Message Broker RabbitMQ implementasyonu için kullanılan metod.
+        //public IResult AddProduct(Product product)
+        //{
+        //    //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
+        //    IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
+
+        //    if (result != null) 
+        //    {
+        //        return result;
+        //    }
+
+        //    int count = 0;
+        //    while (count != 5)
+        //    {
+        //        var message = new { Name = "Producer", Messages = $"{product.ProductName}"};
+        //        //var header = new Dictionary<string, object> { { "account", "add" } };
+        //        _publisher.Publish(JsonConvert.SerializeObject(message), "report.order", null);
+        //        count++;
+        //    }
+
+        //    _productDal.Add(product);
+
+        //    return new SuccessResult(Messages.ProductAdded);
+        //}
+
+        //Redis Cache for getall
+        //public async Task<IDataResult<List<Product>>> GetAll()
+        //{
+        //    if (DateTime.Now.Hour == 23)
+        //    {
+        //        return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime);
+        //    }
+
+        //    var products = await _applicationRedisCache.GetProductsCache();
+        //    return new DataResult<List<Product>>((List<Product>)products,true,Messages.ProductListed);
+        //}
+
+        //RedisCache for AddProduct
+        //[ValidationAspect(typeof(ProductValidator))]
+        //public IResult AddProduct(Product product)
+        //{
+        //    //iş kurallarını çalıştıracak.dönüş null ise/tüm kurallara uyuyorsa dönüş null dır.
+        //    IResult result = BusinessRules.Run(PruductCountControl(product.CategoryId), ProductNameControl(product.ProductName), CategoryCountControl());
+
+        //    if (result != null)
+        //    {
+        //        return result;
+        //    }
+
+        //    _productDal.Add(product);
+
+        //    _applicationRedisCache.DeleteCache("Products_");
+
+        //    return new SuccessResult(Messages.ProductAdded);
+        //}
     }
 }
